@@ -1,0 +1,8 @@
+// ============================================================================
+// PHASE 1: PLUMBING & CONFIGURATION (0-45 mins)
+// ============================================================================
+
+// @copilot-focus: Initialize a React app[cite: 105]. Use Vite to bootstrap the React app.
+// @copilot-focus: Create a netlify.toml file to ensure the application is deployed and reachable on Netlify, building from the repository.
+// @copilot-focus: Generate a .env.example template. Configure Netlify environment variables so no secrets end up in the client bundle. 
+// @copilot-focus: The Claude API key (and any service-role keys) must never ship to the browser.
