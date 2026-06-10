@@ -1,22 +1,22 @@
 /flight-lessons-app
-├── .env.example                              # Provides clear environment variable templates for local setup[cite: 162].
+├── .env.example                              # Provides clear environment variable templates for local setup.
 ├── .gitignore                                # Ensure all keys are not uploaded to the repository
-├── netlify.toml                              # Configures Netlify to build the React app and points to the serverless functions folder[cite: 164].
+├── netlify.toml                              # Configures Netlify to build the React app and points to the serverless functions folder.
 ├── package.json
-├── README.md                                 # Documents your architecture, tradeoffs, and explains the double-booking prevention logic[cite: 163].
-├── vite.config.js                            # Bootstraps the React app using Vite for fast building[cite: 85, 86].
+├── README.md                                 # Documents your architecture, tradeoffs, and explains the double-booking prevention logic.
+├── vite.config.js                            # Bootstraps the React app using Vite for fast building.
 ├── netlify/
 │   └── functions/
-│       └── get-confirmation.js               # Secure server-side middleman where the Claude API key lives to generate confirmations[cite: 165].
+│       └── get-confirmation.js               # Secure server-side middleman where the Claude API key lives to generate confirmations.
 ├── supabase/
-│   └── schema.sql                            # Stores the UNIQUE constraints for double-booking and Row Level Security (RLS) policies[cite: 166].
+│   └── schema.sql                            # Stores the UNIQUE constraints for double-booking and Row Level Security (RLS) policies.
 └── src/
     ├── App.jsx
     ├── index.css
     ├── main.jsx
-    ├── supabaseClient.js                     # Initializes Supabase using the URL and public Anon key (safe for the browser)[cite: 167].
+    ├── supabaseClient.js                     # Initializes Supabase using the URL and public Anon key (safe for the browser).
     └── components/
-        ├── Auth.jsx                          # Handles customer authentication (Supabase Auth) so users can log in[cite: 168].
-        ├── Dashboard.jsx                     # Displays the user's specific bookings and the AI-generated success message[cite: 170].
-        ├── FlightBlocks.jsx                  # Shows the available pre-packaged time slots for flight lessons[cite: 169].
-        └── Toast.jsx                         # UI component that catches and displays the Postgres constraint violation if two users book simultaneously[cite: 171].
+        ├── Auth.jsx                          # Handles customer authentication (Supabase Auth) so users can log in.
+        ├── Dashboard.jsx                     # Displays the user's specific bookings and the AI-generated success message.
+        ├── FlightBlocks.jsx                  # Shows the available pre-packaged time slots for flight lessons.
+        └── Toast.jsx                         # UI component that catches and displays the Postgres constraint violation if two users book simultaneously.
