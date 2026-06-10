@@ -1,0 +1,8 @@
+// ============================================================================
+// PHASE 4: THE CLAUDE API INTEGRATION (2.5 hrs - 3.25 hrs)
+// ============================================================================
+
+// @copilot-focus: Create a Netlify serverless function or a Supabase Edge Function[cite: 121, 150].
+// @copilot-focus: Build a serverless function that generates a friendly, personalized booking confirmation message[cite: 122, 144].
+// @copilot-focus: Guarantee the Claude API key never ships to the browser[cite: 123]. The Claude API key must live server-side only[cite: 145].
+// @copilot-focus: Once a booking succeeds, have the frontend send the user's details to this endpoint to retrieve the AI-generated text[cite: 124].
