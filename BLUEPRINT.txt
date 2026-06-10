@@ -1,6 +1,6 @@
 /flight-lessons-app
 ├── .env.example
-├── .gitignore
+├── .gitignore                                # Ensure all keys are not uploaded to the repository
 ├── netlify.toml
 ├── package.json
 ├── README.md
