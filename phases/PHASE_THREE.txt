@@ -1,0 +1,8 @@
+// ============================================================================
+// PHASE 3: CORE BOOKING FLOW (1.5 hrs - 2.5 hrs)
+// ============================================================================
+
+// @copilot-focus: Build a view showing available time slots for at least one service[cite: 116, 140].
+// @copilot-focus: Provide the ability for the user to book an available slot[cite: 117, 141].
+// @copilot-focus: Rely on the database; if two users click "Book" at the exact same millisecond, Supabase will accept the first transaction and reject the second with a Postgres constraint violation error[cite: 118].
+// @copilot-focus: Catch that specific error code in the frontend and display a polite toast notification[cite: 119].
