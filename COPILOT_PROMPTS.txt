@@ -1,0 +1,35 @@
+--------------------------------------------------------------------------------
+GLOBAL CONTEXT SECTION
+--------------------------------------------------------------------------------
+Act as a senior full-stack engineer. We are building a React booking app deployed on Netlify with a Supabase PostgreSQL backend. Our theme is '3-hour flight lessons'.
+Strict Constraints:
+1. We are using pre-packaged fixed time slots (e.g., 'Morning Flight', 'Afternoon Flight')—do NOT write any complex calendar, timezone, or variable-duration logic.
+2. The Claude API key must NEVER be exposed to the client-side code; it must live in a Netlify Serverless function.
+3. Do not invent new features unless explicitly asked. Stick to minimal, functional code.
+--------------------------------------------------------------------------------
+PHASE 1 & 2: DATABASE SCHEMA AND SECURITY PROMPTS
+--------------------------------------------------------------------------------
+Write the Supabase PostgreSQL schema for our flight lesson booking app.
+
+1. Create a single bookings table with columns: id, user_id (UUID linking to auth.users), time_slot_id (text), and created_at. Do not add any other tables.
+2. To prevent double-booking, add a strict UNIQUE constraint specifically on the time_slot_id column.
+3. Enable Row Level Security (RLS) on the bookings table.
+4. Write an RLS policy that ensures a user can only select and insert their own data, strictly using the formula (auth.uid() = user_id).
+--------------------------------------------------------------------------------
+PHASE 3: FRONTEND BOOKING FLOW AND ERROR CATCHING
+--------------------------------------------------------------------------------
+Create a React component called FlightBlocks.jsx. Hardcode exactly two available time slots: 'Morning Flight: 09:00 AM – 12:00 PM' and 'Afternoon 
+Flight: 01:00 PM – 04:00 PM'. Do not use any external date-picker libraries. Render a 'Book' button for each.
+
+Write the Supabase insert logic for the React booking action. Do NOT check if the slot is open before inserting. Instead, execute the insert directly. 
+If the insert fails due to a Postgres unique constraint violation (because another user booked it at the exact same millisecond), catch that specific error 
+code. Return a state variable that will trigger a toast notification saying exactly: 'Oops! Someone just snatched this slot. Please pick another.'
+--------------------------------------------------------------------------------
+PHASE 4: SERVERLESS AI INTEGRATION
+--------------------------------------------------------------------------------
+Write a Netlify Serverless Function in netlify/functions/get-confirmation.js.
+1. It must securely read CLAUDE_API_KEY from process.env.
+2. It should accept a POST request containing a user's name and time.
+3. Construct a prompt to the Claude API: 'Write a short, fun, 2-sentence text message confirming an appointment for [Name] for an introductory flight lesson at [Time]. 
+Use a friendly pilot tone and one emoji.' 
+4. Return only the AI-generated text in the JSON response. Ensure no API keys or internal headers are leaked in the response object.
