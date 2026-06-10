@@ -1,7 +1,5 @@
 # Flight Lessons Booking App 🛩️
 
-**Tags:** `#React` `#Supabase` `#Netlify` `#ClaudeAPI` `#Serverless` `#FullStack` `#GoMobileAssessment`
-
 ## About
 This project is a full-stack scheduling and booking application built for the GoMobile Technical Assessment. The application is themed around booking a "3-hour flight lesson" block. It allows aspiring pilots to securely authenticate, view available pre-packaged flight blocks (e.g., Morning Flight, Afternoon Flight), and book a slot. 
 
