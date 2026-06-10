@@ -70,3 +70,7 @@ Given more time, I would build out the following "stretch" features:
 **Test Credentials:**
 * **Email:** `testpilot@example.com`
 * **Password:** `password123`
+
+## *LLM Models Utilized for AI Development*
+* Gemini 3.1 Pro --> Used extensively for Brainstorming and Planning.  Prompts for GitHub Copilot were drafted using this AI model to reduce the risk of AI hallucinations
+* 
