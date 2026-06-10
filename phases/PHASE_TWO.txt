@@ -1,0 +1,10 @@
+-- ============================================================================
+-- PHASE 2: AUTH & DATA MODELING (45 mins - 1.5 hrs)
+-- ============================================================================
+
+-- @copilot-focus: Implement customer authentication (Supabase Auth is fine).
+-- @copilot-focus: Set up a `bookings` table to link users to predefined flight slots. 
+-- @copilot-focus: To prevent double-booking, add a UNIQUE constraint on the `time_slot_id` column.
+-- @copilot-focus: Enable Row Level Security (RLS) on tables holding customer data.
+-- @copilot-focus: Write a policy to ensure a customer can see their own bookings, and only their own. 
+-- @copilot-focus: Use a policy formula such as (auth.uid() = user_id) to keep access strictly tied to the user's ID.
