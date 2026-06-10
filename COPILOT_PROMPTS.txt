@@ -15,6 +15,8 @@ Write the Supabase PostgreSQL schema for our flight lesson booking app.
 2. To prevent double-booking, add a strict UNIQUE constraint specifically on the time_slot_id column.
 3. Enable Row Level Security (RLS) on the bookings table.
 4. Write an RLS policy that ensures a user can only select and insert their own data, strictly using the formula (auth.uid() = user_id).
+
+EVERY TIME A FEATURE IS IMPLEMENTED AND IS TESTABLE, TEST IT BEFORE MOVING ON TO THE NEXT ITEM
 --------------------------------------------------------------------------------
 PHASE 3: FRONTEND BOOKING FLOW AND ERROR CATCHING
 --------------------------------------------------------------------------------
@@ -24,6 +26,8 @@ Flight: 01:00 PM – 04:00 PM'. Do not use any external date-picker libraries. R
 Write the Supabase insert logic for the React booking action. Do NOT check if the slot is open before inserting. Instead, execute the insert directly. 
 If the insert fails due to a Postgres unique constraint violation (because another user booked it at the exact same millisecond), catch that specific error 
 code. Return a state variable that will trigger a toast notification saying exactly: 'Oops! Someone just snatched this slot. Please pick another.'
+
+EVERY TIME A FEATURE IS IMPLEMENTED AND IS TESTABLE, TEST IT BEFORE MOVING ON TO THE NEXT ITEM
 --------------------------------------------------------------------------------
 PHASE 4: SERVERLESS AI INTEGRATION
 --------------------------------------------------------------------------------
@@ -33,3 +37,5 @@ Write a Netlify Serverless Function in netlify/functions/get-confirmation.js.
 3. Construct a prompt to the Claude API: 'Write a short, fun, 2-sentence text message confirming an appointment for [Name] for an introductory flight lesson at [Time]. 
 Use a friendly pilot tone and one emoji.' 
 4. Return only the AI-generated text in the JSON response. Ensure no API keys or internal headers are leaked in the response object.
+
+EVERY TIME A FEATURE IS IMPLEMENTED AND IS TESTABLE, TEST IT BEFORE MOVING ON TO THE NEXT ITEM
