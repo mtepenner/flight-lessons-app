@@ -72,5 +72,4 @@ Given more time, I would build out the following "stretch" features:
 * **Password:** `password123`
 
 ## *LLM Models Utilized for AI Development*
-* Gemini 3.1 Pro --> Used extensively for Brainstorming and Planning.  Prompts for GitHub Copilot were drafted using this AI model to reduce the risk of AI hallucinations
-* 
+* Gemini 3.1 Pro --> Used extensively for Brainstorming and Planning prior to beginning the 3-4 hour code development process.  Prompts for GitHub Copilot were drafted using this AI model to reduce the risk of AI hallucinations
