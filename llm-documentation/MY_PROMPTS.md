@@ -7,7 +7,7 @@
 ## 2: upload to the main branch of the github repository and ensure claude works; also every security measure.  It is critical that double booking does not happen in this application
 
 ## 3: (Copied from Supabase)
-```
+```txt
   1. Install packages
   Run this command to install the required dependencies.
   Details:
