@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Vite injects these at build time so Netlify can use either VITE_* or SUPABASE_* names.
+const supabaseUrl = __APP_SUPABASE_URL__;
+const supabaseAnonKey = __APP_SUPABASE_ANON_KEY__;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 

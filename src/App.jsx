@@ -210,9 +210,11 @@ function App({ services = defaultServices }) {
           <h2>Configuration needed</h2>
           <p>
             Add <strong>VITE_SUPABASE_URL</strong> and
-            <strong> VITE_SUPABASE_ANON_KEY</strong> to your local environment or
-            Netlify site settings. Keep <strong>CLAUDE_API_KEY</strong> server-side
-            only.
+            <strong> VITE_SUPABASE_ANON_KEY</strong> to your local environment, or
+            set the Netlify build equivalents <strong>SUPABASE_URL</strong> and
+            <strong> SUPABASE_ANON_KEY</strong>. After changing Netlify environment
+            variables, trigger a fresh deploy. Keep <strong>CLAUDE_API_KEY</strong>
+            server-side only.
           </p>
         </section>
       ) : null}
