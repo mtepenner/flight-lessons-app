@@ -33,12 +33,12 @@ This project is a React booking app for fixed 3-hour introductory flight lessons
 flight-lessons-app/
 ├── netlify/
 │   └── functions/
-│       ├── get-confirmation.js
-│       └── get-confirmation.test.js
+│       └── get-confirmation.js
 ├── src/
 │   ├── components/
 │   ├── services/
 │   ├── test/
+│   │   └── get-confirmation.test.js
 │   ├── App.jsx
 │   ├── constants.js
 │   ├── index.css

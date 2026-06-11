@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { handler } from "./get-confirmation";
+import { handler } from "../../netlify/functions/get-confirmation";
 
 describe("get-confirmation Netlify function", () => {
   afterEach(() => {
