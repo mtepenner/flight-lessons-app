@@ -145,3 +145,4 @@
   npx skills add supabase/agent-skills
   ```
 ```
+## 4: help me get the claude api key
