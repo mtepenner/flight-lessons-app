@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
 const CLAUDE_MODEL = "claude-3-5-haiku-latest";
+const ALLOWED_DAYS = new Set(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
 const ALLOWED_TIMES = new Set(["09:00 AM – 12:00 PM", "01:00 PM – 04:00 PM"]);
 
 function buildHeaders() {
@@ -20,8 +21,8 @@ function jsonResponse(statusCode, payload) {
   };
 }
 
-function buildPrompt(name, time) {
-  return `Write a short, fun, 2-sentence text message confirming an appointment for ${name} for an introductory flight lesson at ${time}. Use a friendly pilot tone and one emoji.`;
+function buildPrompt(name, day, time) {
+  return `Write a short, fun, 2-sentence text message confirming an appointment for ${name} for an introductory flight lesson on ${day} at ${time}. Use a friendly pilot tone and one emoji.`;
 }
 
 function getSupabaseServerClient() {
@@ -92,18 +93,26 @@ export async function handler(event) {
     return jsonResponse(400, { error: "Invalid JSON body." });
   }
 
-  const { name, time } = payload;
+  const { name, day, time } = payload;
 
-  if (!name || !time) {
-    return jsonResponse(400, { error: "name and time are required." });
+  if (!name || !day || !time) {
+    return jsonResponse(400, { error: "name, day, and time are required." });
   }
 
-  if (typeof name !== "string" || typeof time !== "string") {
-    return jsonResponse(400, { error: "name and time must be strings." });
+  if (
+    typeof name !== "string" ||
+    typeof day !== "string" ||
+    typeof time !== "string"
+  ) {
+    return jsonResponse(400, { error: "name, day, and time must be strings." });
   }
 
   if (name.length > 120) {
     return jsonResponse(400, { error: "name is too long." });
+  }
+
+  if (!ALLOWED_DAYS.has(day)) {
+    return jsonResponse(400, { error: "Invalid flight day." });
   }
 
   if (!ALLOWED_TIMES.has(time)) {
@@ -128,7 +137,7 @@ export async function handler(event) {
       messages: [
         {
           role: "user",
-          content: buildPrompt(verifiedName, time),
+          content: buildPrompt(verifiedName, day, time),
         },
       ],
     }),

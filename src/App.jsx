@@ -5,25 +5,57 @@ import Toast from "./components/Toast";
 import {
   DUPLICATE_SLOT_ERROR_CODE,
   DUPLICATE_SLOT_MESSAGE,
+  MISSING_BOOKINGS_TABLE_ERROR_CODE,
+  MISSING_BOOKINGS_TABLE_MESSAGE,
+  createBookingSlotKey,
 } from "./constants";
 import { createAppServices } from "./services/appServices";
 
 const phaseItems = [
   "Phase 1 is complete: Vite, Netlify, and environment scaffolding are in place.",
   "Phase 2 is complete: Supabase Auth, bookings schema, and row-level security are wired.",
-  "Phase 3 is complete: fixed flight blocks book directly into the database with duplicate-slot toast handling.",
+  "Phase 3 is complete: Monday-Friday flight blocks book directly into the database with live availability and duplicate-slot handling.",
   "Phase 4 is complete: a Netlify function keeps the Claude API key server-side and returns the confirmation text only.",
 ];
 
 const defaultServices = createAppServices();
 
+async function loadDashboardData(services) {
+  const [nextBookings, nextAvailability] = await Promise.all([
+    services.listBookings(),
+    services.listAvailability(),
+  ]);
+
+  return {
+    nextAvailability,
+    nextBookings,
+  };
+}
+
+function formatDashboardError(error, fallbackMessage) {
+  const errorMessage = error?.message ?? "";
+
+  if (
+    error?.code === MISSING_BOOKINGS_TABLE_ERROR_CODE ||
+    error?.code === "PGRST202" ||
+    /Could not find the table 'public\.bookings' in the schema cache/i.test(errorMessage) ||
+    /list_available_slots/i.test(errorMessage)
+  ) {
+    return MISSING_BOOKINGS_TABLE_MESSAGE;
+  }
+
+  return errorMessage || fallbackMessage;
+}
+
 function App({ services = defaultServices }) {
+  const [availability, setAvailability] = useState([]);
   const [session, setSession] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(services.isConfigured);
   const [authError, setAuthError] = useState("");
   const [authNotice, setAuthNotice] = useState("");
   const [bookingSlotId, setBookingSlotId] = useState("");
+  const [cancelBookingId, setCancelBookingId] = useState("");
   const [confirmationMessage, setConfirmationMessage] = useState("");
   const [dashboardError, setDashboardError] = useState("");
   const [toastMessage, setToastMessage] = useState("");
@@ -48,12 +80,13 @@ function App({ services = defaultServices }) {
         setDashboardError("");
 
         if (nextSession) {
-          const nextBookings = await services.listBookings();
+          const { nextAvailability, nextBookings } = await loadDashboardData(services);
 
           if (!isActive) {
             return;
           }
 
+          setAvailability(nextAvailability);
           setBookings(nextBookings);
         }
       } catch (error) {
@@ -61,7 +94,9 @@ function App({ services = defaultServices }) {
           return;
         }
 
-        setDashboardError(error.message || "We could not connect to Supabase.");
+        setDashboardError(
+          formatDashboardError(error, "We could not connect to Supabase."),
+        );
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -83,19 +118,23 @@ function App({ services = defaultServices }) {
       setToastMessage("");
 
       if (!nextSession) {
+        setAvailability([]);
         setBookings([]);
         return;
       }
 
       try {
-        const nextBookings = await services.listBookings();
+        const { nextAvailability, nextBookings } = await loadDashboardData(services);
 
         if (isActive) {
+          setAvailability(nextAvailability);
           setBookings(nextBookings);
         }
       } catch (error) {
         if (isActive) {
-          setDashboardError(error.message || "We could not load your bookings.");
+          setDashboardError(
+            formatDashboardError(error, "We could not load your bookings."),
+          );
         }
       }
     });
@@ -131,6 +170,7 @@ function App({ services = defaultServices }) {
   const handleSignOut = async () => {
     try {
       await services.signOut();
+      setAvailability([]);
       setBookings([]);
       setAuthNotice("");
       setConfirmationMessage("");
@@ -151,14 +191,23 @@ function App({ services = defaultServices }) {
       setToastMessage("");
 
       const createdBooking = await services.createBooking({
+        bookingDay: flightBlock.bookingDay,
         userId: session.user.id,
         timeSlotId: flightBlock.label,
       });
 
       setBookings((currentBookings) => [createdBooking, ...currentBookings]);
+      setAvailability((currentAvailability) =>
+        currentAvailability.map((slot) =>
+          createBookingSlotKey(slot.booking_day, slot.time_slot_id) === flightBlock.id
+            ? { ...slot, is_available: false }
+            : slot,
+        ),
+      );
 
       try {
         const nextConfirmation = await services.getConfirmation({
+          day: flightBlock.bookingDay,
           name:
             session.user.user_metadata?.full_name ||
             session.user.email?.split("@")[0] ||
@@ -175,13 +224,50 @@ function App({ services = defaultServices }) {
       }
     } catch (error) {
       if (error.code === DUPLICATE_SLOT_ERROR_CODE) {
+        try {
+          const nextAvailability = await services.listAvailability();
+          setAvailability(nextAvailability);
+        } catch {
+          // Keep the duplicate toast even if availability refresh fails.
+        }
+
         setToastMessage(DUPLICATE_SLOT_MESSAGE);
         return;
       }
 
-      setDashboardError(error.message || "We could not complete your booking.");
+      setDashboardError(
+        formatDashboardError(error, "We could not complete your booking."),
+      );
     } finally {
       setBookingSlotId("");
+    }
+  };
+
+  const handleCancelBooking = async (booking) => {
+    try {
+      setCancelBookingId(booking.id);
+      setDashboardError("");
+      setToastMessage("");
+
+      await services.cancelBooking({ bookingId: booking.id });
+      setBookings((currentBookings) =>
+        currentBookings.filter((currentBooking) => currentBooking.id !== booking.id),
+      );
+      setAvailability((currentAvailability) =>
+        currentAvailability.map((slot) =>
+          createBookingSlotKey(slot.booking_day, slot.time_slot_id) ===
+          createBookingSlotKey(booking.booking_day, booking.time_slot_id)
+            ? { ...slot, is_available: true }
+            : slot,
+        ),
+      );
+      setConfirmationMessage("");
+    } catch (error) {
+      setDashboardError(
+        formatDashboardError(error, "We could not cancel your booking."),
+      );
+    } finally {
+      setCancelBookingId("");
     }
   };
 
@@ -236,11 +322,14 @@ function App({ services = defaultServices }) {
 
       {!isLoading && session ? (
         <Dashboard
+          availability={availability}
           bookingSlotId={bookingSlotId}
+          cancelBookingId={cancelBookingId}
           bookings={bookings}
           confirmationMessage={confirmationMessage}
           errorMessage={dashboardError}
           onBookFlight={handleBookFlight}
+          onCancelBooking={handleCancelBooking}
           onSignOut={handleSignOut}
           user={session.user}
         />

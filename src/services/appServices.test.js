@@ -36,12 +36,23 @@ function createSupabaseDouble() {
         error: null,
       }),
     },
+    rpc: vi.fn().mockResolvedValue({
+      data: [
+        {
+          booking_day: "Monday",
+          time_slot_id: "Morning Flight: 09:00 AM – 12:00 PM",
+          is_available: true,
+        },
+      ],
+      error: null,
+    }),
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         order: vi.fn().mockResolvedValue({
           data: [
             {
               id: "booking-1",
+              booking_day: "Monday",
               time_slot_id: "Morning Flight: 09:00 AM – 12:00 PM",
               created_at: "2026-06-10T12:00:00.000Z",
             },
@@ -60,6 +71,7 @@ describe("createAppServices", () => {
 
     await services.getSession();
     await services.listBookings();
+    await services.listAvailability();
     await services.signIn({ email: "pilot@example.com", password: "pw" });
     await services.signUp({
       name: "Pilot",
@@ -70,6 +82,7 @@ describe("createAppServices", () => {
 
     expect(supabaseClient.auth.getSession).toHaveBeenCalled();
     expect(supabaseClient.from).toHaveBeenCalledWith("bookings");
+    expect(supabaseClient.rpc).toHaveBeenCalledWith("list_available_slots");
     expect(supabaseClient.auth.signInWithPassword).toHaveBeenCalledWith({
       email: "pilot@example.com",
       password: "pw",
@@ -90,6 +103,7 @@ describe("createAppServices", () => {
     const single = vi.fn().mockResolvedValue({
       data: {
         id: "booking-2",
+        booking_day: "Tuesday",
         time_slot_id: "Morning Flight: 09:00 AM – 12:00 PM",
         created_at: "2026-06-10T12:00:00.000Z",
       },
@@ -117,21 +131,59 @@ describe("createAppServices", () => {
           signOut: vi.fn(),
           signUp: vi.fn(),
         },
+        rpc: vi.fn(),
         from,
       },
     });
 
     await services.createBooking({
+      bookingDay: "Tuesday",
       userId: "pilot-1",
       timeSlotId: "Morning Flight: 09:00 AM – 12:00 PM",
     });
 
     expect(from).toHaveBeenCalledWith("bookings");
     expect(insert).toHaveBeenCalledWith({
+      booking_day: "Tuesday",
       time_slot_id: "Morning Flight: 09:00 AM – 12:00 PM",
     });
-    expect(select).toHaveBeenCalledWith("id, time_slot_id, created_at");
+    expect(select).toHaveBeenCalledWith("id, booking_day, time_slot_id, created_at");
     expect(single).toHaveBeenCalled();
+  });
+
+  it("cancels a booking by deleting the row from the bookings table", async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    const deleteBooking = vi.fn().mockReturnValue({ eq });
+    const from = vi.fn().mockReturnValue({ delete: deleteBooking });
+    const services = createAppServices({
+      supabaseClient: {
+        auth: {
+          getSession: vi.fn().mockResolvedValue({
+            data: {
+              session: {
+                access_token: "session-token",
+                user: { id: "pilot-1" },
+              },
+            },
+            error: null,
+          }),
+          onAuthStateChange: vi.fn().mockReturnValue({
+            data: { subscription: { unsubscribe: vi.fn() } },
+          }),
+          signInWithPassword: vi.fn(),
+          signOut: vi.fn(),
+          signUp: vi.fn(),
+        },
+        rpc: vi.fn(),
+        from,
+      },
+    });
+
+    await services.cancelBooking({ bookingId: "booking-2" });
+
+    expect(from).toHaveBeenCalledWith("bookings");
+    expect(deleteBooking).toHaveBeenCalled();
+    expect(eq).toHaveBeenCalledWith("id", "booking-2");
   });
 
   it("calls the Netlify confirmation endpoint and returns the message only", async () => {
@@ -161,6 +213,7 @@ describe("createAppServices", () => {
           signOut: vi.fn(),
           signUp: vi.fn(),
         },
+        rpc: vi.fn(),
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             order: vi.fn(),
@@ -170,20 +223,24 @@ describe("createAppServices", () => {
     });
 
     const message = await services.getConfirmation({
+      day: "Wednesday",
       name: "Pilot",
       time: "09:00 AM – 12:00 PM",
     });
 
-    expect(fetchImpl).toHaveBeenCalledWith("/.netlify/functions/get-confirmation", {
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0][0]).toBe("/.netlify/functions/get-confirmation");
+    expect(fetchImpl.mock.calls[0][1]).toMatchObject({
       method: "POST",
       headers: {
         Authorization: "Bearer session-token",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        name: "Pilot",
-        time: "09:00 AM – 12:00 PM",
-      }),
+    });
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual({
+      day: "Wednesday",
+      name: "Pilot",
+      time: "09:00 AM – 12:00 PM",
     });
     expect(message).toBe(
       "Cleared for takeoff, Pilot. Wheels up at 09:00 AM – 12:00 PM! ✈️",
@@ -208,6 +265,7 @@ describe("createAppServices", () => {
         signOut: vi.fn(),
         signUp: vi.fn(),
       },
+      rpc: vi.fn(),
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           order: vi.fn(),
@@ -221,6 +279,7 @@ describe("createAppServices", () => {
 
     await expect(
       services.getConfirmation({
+        day: "Wednesday",
         name: "Pilot",
         time: "09:00 AM – 12:00 PM",
       }),

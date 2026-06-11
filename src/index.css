@@ -170,6 +170,14 @@ h1 {
   transform: translateY(-1px);
 }
 
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+  box-shadow: none;
+}
+
 .form-grid {
   display: grid;
   gap: 0.9rem;
@@ -221,6 +229,18 @@ h1 {
   border: 1px solid rgba(170, 205, 255, 0.12);
 }
 
+.booking-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.booking-details {
+  display: grid;
+  gap: 0.25rem;
+}
+
 .user-meta {
   display: flex;
   flex-wrap: wrap;
@@ -241,9 +261,17 @@ h1 {
   padding: 1.15rem;
 }
 
+.flight-card.unavailable {
+  opacity: 0.78;
+}
+
 .flight-card h4 {
   margin: 0;
   font-size: 1.1rem;
+}
+
+.availability-summary {
+  margin: 0 0 1rem;
 }
 
 .toast {
@@ -289,5 +317,10 @@ h1 {
     bottom: 1rem;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .booking-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

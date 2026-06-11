@@ -218,6 +218,10 @@ Line 79: ───────────────────────�
 Line 80:
 Line 81: Starting to deploy site from 'dist'
 Line 82: Calculating files to upload
+
+## 6. Weekday Booking Expansion Request
+
+so I can only select a time slot but not day of the week. Change that so Monday-Friday I can book a time. Also show available time slots. Also allow the user to cancel. also add this prompt to MY_PROMPTS
 Line 83: Execution cancelled
 Line 84: Failing build: Failed to build site
 Line 85: Finished processing build request in 15.7s
