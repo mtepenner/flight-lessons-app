@@ -1,0 +1,92 @@
+import FlightBlocks from "./FlightBlocks";
+
+function getPilotName(user) {
+  if (user?.user_metadata?.full_name) {
+    return user.user_metadata.full_name;
+  }
+
+  if (user?.email) {
+    return user.email.split("@")[0];
+  }
+
+  return "Pilot";
+}
+
+function Dashboard({
+  bookingSlotId,
+  bookings,
+  confirmationMessage,
+  errorMessage,
+  onBookFlight,
+  onSignOut,
+  user,
+}) {
+  const pilotName = getPilotName(user);
+  const bookedSlots = new Set(bookings.map((booking) => booking.time_slot_id));
+
+  return (
+    <section className="dashboard-layout">
+      <div className="user-meta">
+        <div>
+          <p className="eyebrow">Signed in</p>
+          <h2>Welcome back, {pilotName}.</h2>
+          <p className="muted-text">Only your own bookings are readable because the table is protected by RLS.</p>
+        </div>
+        <button className="secondary-button" type="button" onClick={onSignOut}>
+          Sign out
+        </button>
+      </div>
+
+      <div className="dashboard-grid">
+        <article className="stack-card">
+          <h3>Available flight blocks</h3>
+          <p className="muted-text">
+            These are the only two fixed 3-hour lessons. The frontend inserts
+            directly into the bookings table and lets Postgres settle any race.
+          </p>
+          <FlightBlocks
+            bookedSlots={bookedSlots}
+            bookingSlotId={bookingSlotId}
+            onBook={onBookFlight}
+          />
+        </article>
+
+        <article className="stack-card">
+          <h3>Your bookings</h3>
+          {bookings.length ? (
+            <ul className="booking-list">
+              {bookings.map((booking) => (
+                <li key={booking.id}>
+                  <strong>{booking.time_slot_id}</strong>
+                  <div className="muted-text">Booked at {new Date(booking.created_at).toLocaleString()}</div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted-text">No bookings yet. Pick a fixed 3-hour block to reserve your intro lesson.</p>
+          )}
+
+          {confirmationMessage ? (
+            <div className="confirmation-panel">
+              <p className="eyebrow">Confirmation</p>
+              <p>{confirmationMessage}</p>
+            </div>
+          ) : null}
+        </article>
+
+        <article className="stack-card">
+          <h3>System status</h3>
+          <ul className="booking-list">
+            <li>Supabase Auth session is active.</li>
+            <li>The dashboard queries only the signed-in user&apos;s rows.</li>
+            <li>The booking flow inserts directly into the same protected table.</li>
+            <li>The confirmation message is generated server-side by a Netlify function.</li>
+          </ul>
+          {errorMessage ? <p className="status-text error">{errorMessage}</p> : null}
+        </article>
+      </div>
+    </section>
+  );
+}
+
+export default Dashboard;

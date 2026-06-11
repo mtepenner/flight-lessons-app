@@ -1,75 +1,110 @@
-# Flight Lessons Booking App 🛩️
+# Flight Lessons Booking App
 
-## About
-This project is a full-stack scheduling and booking application built for the GoMobile Technical Assessment. The application is themed around booking a "3-hour flight lesson" block. It allows aspiring pilots to securely authenticate, view available pre-packaged flight blocks (e.g., Morning Flight, Afternoon Flight), and book a slot. 
+## Overview
+This project is a React booking app for fixed 3-hour introductory flight lessons. It uses Supabase Auth for customer sign-in, a single RLS-protected `bookings` table for persistence, and a Netlify serverless function to generate a friendly Claude-powered confirmation after a successful reservation.
 
-The application is built with a focus on robust data security, database-level concurrency (to prevent double-booking), and secure AI integration. 
+## Completed Phases
+### Phase 1: Plumbing and configuration
+- Vite React app scaffolded in the repo root.
+- `netlify.toml` configured for static build output and Netlify functions.
+- `.env.example` added for local Supabase and server-side Claude configuration.
 
-## Technology Stack
-* **Frontend:** React (Bootstrapped with Vite)
-* **Backend / Database:** Supabase (Postgres, Auth, Row Level Security)
-* **Hosting / CI/CD:** Netlify
-* **AI Integration:** Claude API via Netlify Serverless Functions
+### Phase 2: Auth and data modeling
+- Supabase client wired with browser-safe anon credentials only.
+- `supabase/schema.sql` creates a single `bookings` table.
+- `time_slot_id` is protected with a `UNIQUE` constraint to prevent double-booking.
+- Row Level Security is enabled and policies use `auth.uid() = user_id` for reads and inserts.
 
----
+### Phase 3: Core booking flow
+- The UI exposes exactly two fixed lesson blocks:
+  - `Morning Flight: 09:00 AM – 12:00 PM`
+  - `Afternoon Flight: 01:00 PM – 04:00 PM`
+- Booking inserts go directly to Supabase without a client-side availability pre-check.
+- Postgres unique violations are caught in the frontend and shown as:
+  - `Oops! Someone just snatched this slot. Please pick another.`
 
-## 🎯 Major Milestones (Implementation Plan)
+### Phase 4: Serverless AI integration
+- `netlify/functions/get-confirmation.js` reads `CLAUDE_API_KEY` from `process.env`.
+- The frontend calls the function only after a successful booking.
+- The dashboard displays the generated confirmation text and keeps the booking visible even if the AI step fails.
 
-*Note: The project is currently in the planning step. The following phases outline the implementation strategy.*
+## Project Structure
+```text
+flight-lessons-app/
+├── netlify/
+│   └── functions/
+│       ├── get-confirmation.js
+│       └── get-confirmation.test.js
+├── src/
+│   ├── components/
+│   ├── services/
+│   ├── test/
+│   ├── App.jsx
+│   ├── constants.js
+│   ├── index.css
+│   ├── main.jsx
+│   └── supabaseClient.js
+├── supabase/
+│   └── schema.sql
+├── .env.example
+├── netlify.toml
+├── package.json
+└── README.md
+```
 
-### Phase 1: Plumbing & Configuration
-- [ ] Initialize a React app using Vite.
-- [ ] Configure `netlify.toml` to ensure the application is correctly built and deployed to Netlify from the GitHub repository.
-- [ ] Generate a `.env.example` template for straightforward local setup.
-- [ ] Configure Netlify environment variables securely, ensuring sensitive keys (like the Claude API key) never ship to the client bundle.
+## Local Setup
+1. Install dependencies:
+	```bash
+	npm install
+	```
+2. Copy the values from `.env.example` into a local `.env` file and provide:
+	- `VITE_SUPABASE_URL`
+	- `VITE_SUPABASE_ANON_KEY`
+	- `SUPABASE_URL`
+	- `SUPABASE_ANON_KEY`
+	- `CLAUDE_API_KEY`
+3. Apply `supabase/schema.sql` to your Supabase project.
+4. Start the frontend locally:
+	```bash
+	npm run dev
+	```
+5. For end-to-end testing of the Netlify function locally, run through Netlify rather than plain Vite:
+	```bash
+	npx netlify-cli dev
+	```
 
-### Phase 2: Auth & Data Modeling (The Core Trap)
-- [ ] Implement customer authentication using Supabase Auth.
-- [ ] Set up a `bookings` table to link users to predefined 3-hour flight slots.
-- [ ] **Concurrency Control:** Add a `UNIQUE` constraint on the `time_slot_id` column to prevent double-booking directly at the database level.
-- [ ] Enable clean, verified **Row Level Security (RLS)** on all tables holding customer data.
-- [ ] Write a policy (e.g., `(auth.uid() = user_id)`) to ensure a customer can only read and write their own flight bookings.
+## Validation
+Run the unit and integration tests:
 
-### Phase 3: Core Booking Flow
-- [ ] Build a frontend view displaying available flight blocks.
-- [ ] Implement the booking action. If two users attempt to book the exact same slot simultaneously, the Supabase Postgres database will reject the second transaction with a constraint violation.
-- [ ] Catch the constraint violation error gracefully in the React frontend and display a polite toast notification (e.g., *"Oops! Someone just snatched this slot. Please pick another."*).
+```bash
+npm test
+```
 
-### Phase 4: Serverless AI Integration (Claude API)
-- [ ] Create a Netlify Serverless Function (`/.netlify/functions/get-confirmation`) to act as a secure middleman.
-- [ ] Store the `CLAUDE_API_KEY` exclusively on the server-side environment.
-- [ ] Trigger the function upon a successful booking to dynamically generate a personalized, friendly 2-sentence confirmation text message using a pilot persona and an emoji.
-- [ ] Display the AI-generated confirmation message on the user's dashboard.
+Build the production bundle:
 
----
+```bash
+npm run build
+```
 
-## 🏗️ Architecture & Tradeoffs
+## Architecture Notes
+- Fixed lesson blocks were chosen instead of a free-form calendar so the booking model can stay simple and concurrency-safe.
+- The browser uses only the Supabase anon key.
+- The Claude API key never appears in client code and is only read by the Netlify function.
+- The Netlify function now requires a valid Supabase bearer token before it will call Claude.
+- The database derives `user_id` from `auth.uid()` and rejects any slot outside the two allowed flight blocks.
 
-To deliver a high-quality application within the tight 3-4 hour sprint window, ruthless scoping was necessary. 
+## How Double-Booking Is Prevented
+Double-booking is blocked at the database layer. The app inserts directly into the `bookings` table, and Postgres rejects any second insert that reuses the same `time_slot_id` because of the `UNIQUE` constraint. The frontend then catches that specific constraint violation and shows the user a polite retry message.
 
-* **Fixed Flight Blocks vs. Flexible Calendar:** I chose to offer strictly pre-defined "Flight Blocks" (e.g., Morning: 9 AM - 12 PM) rather than allowing users to pick a custom start time. This tradeoff eliminated complex variable duration and time-zone overlap logic, allowing me to rely entirely on robust database-level constraints.
-* **Time Zones:** I skipped complex time zone logic and assumed all slots are in UTC to save time, focusing instead on core database concurrency.
+## Security Controls
+- `CLAUDE_API_KEY` stays server-side only inside the Netlify function.
+- The confirmation endpoint requires a valid Supabase access token.
+- Response bodies do not leak upstream Claude headers or secret values.
+- Netlify response headers set a CSP, disable framing, and reduce referrer and browser capability exposure.
+- RLS protects reads and inserts, and no update or delete policies are granted.
 
-## 🔒 How Double-Booking is Prevented
-
-If we relied on the frontend to check if a slot was open before booking, a race condition would occur. Instead, I let Postgres handle the heavy lifting. By treating an entire 3-hour flight block as a single, indivisible ID, I placed a **`UNIQUE` constraint** on the `time_slot_id` column in the `bookings` table. If two users click "Book" at the exact same millisecond, the database inherently accepts the first transaction and rejects the second, making double-booking impossible.
-
-## 🚀 Next Steps (What I Knowingly Skipped)
-Given more time, I would build out the following "stretch" features:
-1.  **Email Reminders:** Implement a scheduled function to trigger a 24-hour reminder email via Resend or SendGrid.
-2.  **Live Slot Updates:** Implement Supabase Realtime to instantly gray out a taken flight slot on everyone else's screen without requiring a page refresh.
-3.  **Admin View:** Create a secure, protected route using the Supabase `service_role` key to bypass RLS and allow an administrator to view and manage all bookings.
-4.  **Rescheduling & Pagination:** Add robust UI support for editing existing bookings and paginating through past flight history.
-
----
-
-## 🛠️ Getting Started
-
-*(Placeholder for instructions on how to run the app locally, install dependencies, and setup the `.env` variables)*
-
-**Test Credentials:**
-* **Email:** `testpilot@example.com`
-* **Password:** `password123`
-
-## *LLM Models Utilized for AI Development*
-* Gemini 3.1 Pro --> Used extensively for Brainstorming and Planning prior to beginning the 3-4 hour code development process.  Prompts for GitHub Copilot were drafted using this AI model to reduce the risk of AI hallucinations
+## Future Stretch Work
+1. Add live slot updates with Supabase Realtime.
+2. Add an admin view for staff-managed bookings.
+3. Add reminder email delivery.
+4. Add rescheduling and booking history pagination.
