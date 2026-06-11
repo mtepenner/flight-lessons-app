@@ -1,148 +1,146 @@
-# **The Prompts I Used When Conversing with GitHub CoPilot** 
+# The Prompts I Used When Conversing with GitHub Copilot
 
-### Model Used: GPT-5.4
-### Thinking Effort Setting: Xhigh
+## Model Settings
 
-## 1: read over the flight-lessons-app documentation carefully and implement and test each phase of it
-## 2: upload to the main branch of the github repository and ensure claude works; also every security measure.  It is critical that double booking does not happen in this application
+- Model used: GPT-5.4
+- Thinking effort setting: Xhigh
 
-## 3: (Copied from Supabase)
-```txt
-  1. Install packages
-  Run this command to install the required dependencies.
-  Details:
-  npm install @supabase/supabase-js @supabase/ssr
-  Code:
-  File: Code
-  ```
-  npm install @supabase/supabase-js @supabase/ssr
-  ```
-  
-  2. Add files
-  Add env variables, create Supabase client helpers, and set up middleware to keep sessions refreshed.
-  Code:
-  File: .env.local
-  ```
-  NEXT_PUBLIC_SUPABASE_URL=https://mfktfkcybahqdjhntxal.supabase.co
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_q2mn5-vZYqBxNpuVdPGc6g_QHodXp5V
-  ```
-  
-  File: page.tsx
-  ```
-  1import { createClient } from '@/utils/supabase/server'
-  2import { cookies } from 'next/headers'
-  3
-  4export default async function Page() {
-  5  const cookieStore = await cookies()
-  6  const supabase = createClient(cookieStore)
-  7
-  8  const { data: todos } = await supabase.from('todos').select()
-  9
-  10  return (
-  11    <ul>
-  12      {todos?.map((todo) => (
-  13        <li key={todo.id}>{todo.name}</li>
-  14      ))}
-  15    </ul>
-  16  )
-  17}
-  ```
-  
-  File: utils/supabase/server.ts
-  ```
-  1import { createServerClient } from "@supabase/ssr";
-  2import { cookies } from "next/headers";
-  3
-  4const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  5const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  6
-  7export const createClient = (cookieStore: Awaited<ReturnType<typeof cookies>>) => {
-  8  return createServerClient(
-  9    supabaseUrl!,
-  10    supabaseKey!,
-  11    {
-  12      cookies: {
-  13        getAll() {
-  14          return cookieStore.getAll()
-  15        },
-  16        setAll(cookiesToSet) {
-  17          try {
-  18            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-  19          } catch {
-  20            // The `setAll` method was called from a Server Component.
-  21            // This can be ignored if you have middleware refreshing
-  22            // user sessions.
-  23          }
-  24        },
-  25      },
-  26    },
-  27  );
-  28};
-  ```
-  
-  File: utils/supabase/client.ts
-  ```
-  1import { createBrowserClient } from "@supabase/ssr";
-  2
-  3const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  4const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  5
-  6export const createClient = () =>
-  7  createBrowserClient(
-  8    supabaseUrl!,
-  9    supabaseKey!,
-  10  );
-  ```
-  
-  File: utils/supabase/middleware.ts
-  ```
-  1import { createServerClient } from "@supabase/ssr";
-  2import { type NextRequest, NextResponse } from "next/server";
-  3
-  4const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  5const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  6
-  7export const createClient = (request: NextRequest) => {
-  8  // Create an unmodified response
-  9  let supabaseResponse = NextResponse.next({
-  10    request: {
-  11      headers: request.headers,
-  12    },
-  13  });
-  14
-  15  const supabase = createServerClient(
-  16    supabaseUrl!,
-  17    supabaseKey!,
-  18    {
-  19      cookies: {
-  20        getAll() {
-  21          return request.cookies.getAll()
-  22        },
-  23        setAll(cookiesToSet) {
-  24          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-  25          supabaseResponse = NextResponse.next({
-  26            request,
-  27          })
-  28          cookiesToSet.forEach(({ name, value, options }) =>
-  29            supabaseResponse.cookies.set(name, value, options)
-  30          )
-  31        },
-  32      },
-  33    },
-  34  );
-  35
-  36  return supabaseResponse
-  37};
-  ```
-  
-  3. Install Agent Skills (Optional)
-  Agent Skills give AI coding tools ready-made instructions, scripts, and resources for working with Supabase more accurately and efficiently.
-  Details:
-  npx skills add supabase/agent-skills
-  Code:
-  File: Code
-  ```
-  npx skills add supabase/agent-skills
-  ```
+## 1. Initial Build Request
+
+Read over the flight-lessons-app documentation carefully and implement and test each phase of it.
+
+## 2. Deployment and Security Request
+
+Upload to the `main` branch of the GitHub repository and ensure Claude works; also every security measure. It is critical that double booking does not happen in this application.
+
+## 3. Supabase Instructions I Pasted
+
+### 3.1 Install Packages
+
+Run this command to install the required dependencies.
+
+```bash
+npm install @supabase/supabase-js @supabase/ssr
 ```
-## 4: help me get the claude api key
+
+### 3.2 Add Files
+
+Add environment variables, create Supabase client helpers, and set up middleware to keep sessions refreshed.
+
+#### `.env.local`
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://mfktfkcybahqdjhntxal.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_q2mn5-vZYqBxNpuVdPGc6g_QHodXp5V
+```
+
+#### `page.tsx`
+
+```tsx
+import { createClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
+
+export default async function Page() {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+
+  const { data: todos } = await supabase.from('todos').select()
+
+  return (
+    <ul>
+      {todos?.map((todo) => (
+        <li key={todo.id}>{todo.name}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+#### `utils/supabase/server.ts`
+
+```ts
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+export const createClient = (cookieStore: Awaited<ReturnType<typeof cookies>>) => {
+  return createServerClient(supabaseUrl!, supabaseKey!, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options),
+          );
+        } catch {
+          // The `setAll` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
+        }
+      },
+    },
+  });
+};
+```
+
+#### `utils/supabase/client.ts`
+
+```ts
+import { createBrowserClient } from "@supabase/ssr";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+export const createClient = () => createBrowserClient(supabaseUrl!, supabaseKey!);
+```
+
+#### `utils/supabase/middleware.ts`
+
+```ts
+import { createServerClient } from "@supabase/ssr";
+import { type NextRequest, NextResponse } from "next/server";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+export const createClient = (request: NextRequest) => {
+  let supabaseResponse = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  createServerClient(supabaseUrl!, supabaseKey!, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        supabaseResponse = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options),
+        );
+      },
+    },
+  });
+
+  return supabaseResponse;
+};
+```
+
+### 3.3 Install Agent Skills (Optional)
+
+Agent Skills give AI coding tools ready-made instructions, scripts, and resources for working with Supabase more accurately and efficiently.
+
+```bash
+npx skills add supabase/agent-skills
+```
+
+## 4. Claude API Key Request
+
+Help me get the Claude API key.
